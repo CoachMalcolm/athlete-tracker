@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Athlete Training Dashboard</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif; background: #f5f5f5; color: #333; padding: 16px; max-width: 700px; margin: 0 auto; }
+h1 { font-size: 22px; margin-bottom: 8px; color: #1a73e8; }
+.subtitle { font-size: 13px; color: #999; margin-bottom: 20px; }
+h2 { font-size: 16px; margin: 24px 0 10px; color: #444; text-transform: uppercase; letter-spacing: 0.5px; }
+.card { background: #fff; border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; }
+.exercise { font-weight: 500; font-size: 15px; }
+.reps { font-size: 12px; color: #888; margin-top: 2px; }
+.load { font-size: 18px; font-weight: 700; color: #1a73e8; white-space: nowrap; }
+.loading { text-align: center; padding: 40px; color: #999; }
+.error { color: #d32f2f; padding: 20px; text-align: center; }
+.empty-load { color: #ccc; }
+.refresh-btn { display: block; width: 100%; padding: 12px; margin-top: 20px; background: #1a73e8; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 500; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>Training Dashboard</h1>
+<p class="subtitle" id="lastUpdated">Loading...</p>
+<div id="content"><div class="loading">Loading training data...</div></div>
+<button class="refresh-btn" onclick="fetchData()">Refresh</button>
+<script>
+const SHEET_CSV_URL = 'PASTE_YOUR_CSV_URL_HERE';
+async function fetchData() {
+  const content = document.getElementById('content');
+  content.innerHTML = '<div class="loading">Loading training data...</div>';
+  try {
+    const response = await fetch(SHEET_CSV_URL + '&t=' + Date.now());
+    const csvText = await response.text();
+    const rows = parseCSV(csvText);
+    renderDashboard(rows);
+    document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleString();
+  } catch (err) {
+    content.innerHTML = '<div class="error">Unable to load training data.</div>';
+    document.getElementById('lastUpdated').textContent = 'Update failed';
+  }
+}
+function parseCSV(text) {
+  const rows = []; let current = ''; let row = []; let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i]; const next = text[i + 1];
+    if (char === '"') { if (inQuotes && next === '"') { current += '"'; i++; } else { inQuotes = !inQuotes; } }
+    else if (char === ',' && !inQuotes) { row.push(current.trim()); current = ''; }
+    else if ((char === '\n' || char === '\r') && !inQuotes) { if (current || row.length) { row.push(current.trim()); rows.push(row); row = []; current = ''; } if (char === '\r' && next === '\n') i++; }
+    else { current += char; }
+  }
+  if (current || row.length) { row.push(current.trim()); rows.push(row); }
+  return rows;
+}
+function renderDashboard(rows) {
+  const content = document.getElementById('content');
+  if (!rows || rows.length < 2) { content.innerHTML = '<div class="loading">No data yet.</div>'; return; }
+  const dayOrder = ['Mon', 'Tue', 'Thu', 'Fri']; const days = {};
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i]; if (!row[0] || !row[1]) continue;
+    const day = row[0].trim(); if (!days[day]) days[day] = [];
+    days[day].push({ exercise: row[1].trim(), load: (row[2] || '').trim(), reps: (row[3] || '').trim(), notes: (row[4] || '').trim() });
+  }
+  let html = '';
+  const sortedDays = Object.keys(days).sort((a, b) => { const ia = dayOrder.indexOf(a); const ib = dayOrder.indexOf(b); return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib); });
+  for (const day of sortedDays) {
+    html += '<h2>' + escapeHtml(day) + '</h2>';
+    days[day].forEach(ex => {
+      const loadDisplay = ex.load ? escapeHtml(ex.load) + ' lbs' : '<span class="empty-load">—</span>';
+      html += '<div class="card"><div><div class="exercise">' + escapeHtml(ex.exercise) + '</div><div class="reps">Target: ' + (escapeHtml(ex.reps) || '—') + ' reps</div></div><div class="load">' + loadDisplay + '</div></div>';
+    });
+  }
+  content.innerHTML = html || '<div class="loading">No data yet.</div>';
+}
+function escapeHtml(s) { if (!s) return ''; return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+fetchData();
+</script>
+</body>
+</html>
