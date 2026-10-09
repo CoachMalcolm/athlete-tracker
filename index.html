@@ -26,7 +26,7 @@ h2 { font-size: 16px; margin: 24px 0 10px; color: #444; text-transform: uppercas
 <div id="content"><div class="loading">Loading training data...</div></div>
 <button class="refresh-btn" onclick="fetchData()">Refresh</button>
 <script>
-const SHEET_CSV_URL = 'PASTE_YOUR_CSV_URL_HERE';
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSOMnWaUPs1dSapL96o3W36tO3BPI_F0CYFP1MM_-ggPCt9VuMXrBn2Y1-6eLIhS9b9DANpYr6uq_l4/pub?gid=0&single=true&output=csv';
 async function fetchData() {
   const content = document.getElementById('content');
   content.innerHTML = '<div class="loading">Loading training data...</div>';
