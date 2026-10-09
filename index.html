@@ -60,15 +60,14 @@ function renderDashboard(rows) {
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i]; if (!row[0] || !row[1]) continue;
     const day = row[0].trim(); if (!days[day]) days[day] = [];
-    days[day].push({ exercise: row[1].trim(), load: (row[2] || '').trim(), reps: (row[3] || '').trim(), notes: (row[4] || '').trim() });
-  }
+    days[day].push({ exercise: row[1].trim(), load: (row[2] || '').trim(), reps: (row[3] || '').trim(), sets: (row[5] || '3').trim(), notes: (row[4] || '').trim() });
   let html = '';
   const sortedDays = Object.keys(days).sort((a, b) => { const ia = dayOrder.indexOf(a); const ib = dayOrder.indexOf(b); return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib); });
   for (const day of sortedDays) {
     html += '<h2>' + escapeHtml(day) + '</h2>';
     days[day].forEach(ex => {
       const loadDisplay = ex.load ? escapeHtml(ex.load) + ' lbs' : '<span class="empty-load">—</span>';
-      html += '<div class="card"><div><div class="exercise">' + escapeHtml(ex.exercise) + '</div><div class="reps">Target: ' + (escapeHtml(ex.reps) || '—') + ' reps</div></div><div class="load">' + loadDisplay + '</div></div>';
+      html += '<div class="card"><div><div class="exercise">' + escapeHtml(ex.exercise) + '</div><div class="reps">Target: ' + (escapeHtml(ex.sets) || '3') + ' × ' + (escapeHtml(ex.reps) || '—') + ' reps</div></div><div class="load">' + loadDisplay + '</div></div>';
     });
   }
   content.innerHTML = html || '<div class="loading">No data yet.</div>';
