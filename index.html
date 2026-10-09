@@ -31,7 +31,7 @@ async function fetchData() {
   const content = document.getElementById('content');
   content.innerHTML = '<div class="loading">Loading training data...</div>';
   try {
-    const response = await fetch(SHEET_CSV_URL + '&t=' + Date.now());
+   const response = await fetch(SHEET_CSV_URL, { cache: 'no-cache' });
     const csvText = await response.text();
     const rows = parseCSV(csvText);
     renderDashboard(rows);
